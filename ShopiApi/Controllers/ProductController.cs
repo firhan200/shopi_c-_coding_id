@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ShopiApi.Dto.Product;
 using ShopiApi.Models;
 using ShopiApi.Repositories;
 using ShopiApi.Services;
+using System.Security.Claims;
 
 namespace ShopiApi.Controllers
 {
@@ -20,10 +22,21 @@ namespace ShopiApi.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
+        [Authorize]
         [HttpGet]
         public ActionResult GetAll()
         {
             return Ok(_productRepository.GetAll());
+        }
+
+        [Authorize]
+        [HttpGet("/GetUserId")]
+        public ActionResult GetUserId()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.Sid);
+            var role = User.FindFirstValue(ClaimTypes.Role);
+
+            return Ok(new { UserId = userId, Role = role });
         }
 
         [HttpGet("GetAll/WithAdapter")]
@@ -32,6 +45,7 @@ namespace ShopiApi.Controllers
             return Ok(_productRepository.GetAllWithAdapter());
         }
 
+        [Authorize(Roles = "admin")]
         [HttpPost]
         public async Task<ActionResult> Create([FromForm] CreateProductDto data)
         {
